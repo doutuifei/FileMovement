@@ -1,5 +1,7 @@
 package com.muzi.filemovement;
 
+import java.io.File;
+
 /**
  * 作者: lipeng
  * 时间: 2019/7/9
@@ -8,9 +10,11 @@ package com.muzi.filemovement;
  */
 public interface Callback {
 
+    int getInterval();
+
     void onStart();
 
-    void onScan(float totalSize, int fileSize);
+    void onScan(File file);
 
     void onProgress(int progress);
 

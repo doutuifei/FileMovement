@@ -1,5 +1,8 @@
 package com.muzi.filemovement;
 
+import android.os.Handler;
+import android.os.Message;
+
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
@@ -23,9 +26,11 @@ public class FileMoveManager {
         return ourInstance;
     }
 
-    private long totalLength;
+    private double totalLength;
 
-    private long moveLength;
+    private double moveLength;
+
+    private Callback callback;
 
     private List<FilePackage> filePackageList = new ArrayList<>();
 
@@ -33,7 +38,8 @@ public class FileMoveManager {
     }
 
 
-    public void move(final String oldDesc, final String newDesc) {
+    public void move(final String oldDesc, final String newDesc, final Callback callback) {
+        this.callback = callback;
         if (oldDesc == null) {
             return;
         }
@@ -41,14 +47,21 @@ public class FileMoveManager {
         if (!file.exists()) {
             return;
         }
-
-        new Thread(new Runnable() {
+        if (callback != null) {
+            callback.onStart();
+        }
+        Thread thread = new Thread(new Runnable() {
             @Override
             public void run() {
                 scanPath(file, oldDesc, newDesc);
                 realMove();
+                if (callback != null) {
+                    callback.onProgress(100);
+                    callback.onFinish();
+                }
             }
-        }).start();
+        });
+        thread.start();
     }
 
     private void scanPath(File file, String oldDesc, String newDesc) {
@@ -63,8 +76,15 @@ public class FileMoveManager {
     }
 
     private void addList(File file, String oldDesc, String newDesc) {
+        if (callback != null) {
+            callback.onScan(file);
+        }
         String oldPath = file.getAbsolutePath();
         String newPath = newDesc + oldPath.substring(oldDesc.length());
+        File newFile = new File(newPath);
+        if (newFile.exists()) {
+            return;
+        }
         long length = file.length();
         FilePackage filePackage = new FilePackage();
         filePackage.setNewPath(newPath);
@@ -76,6 +96,7 @@ public class FileMoveManager {
     }
 
     private void realMove() {
+        handler.sendEmptyMessage(0);
         for (FilePackage aPackage : filePackageList) {
             String oldPath = aPackage.getOldPath();
             String newPath = aPackage.getNewPath();
@@ -112,7 +133,29 @@ public class FileMoveManager {
         bin.close();
     }
 
-    private void remove(String path) {
+    private Handler handler = new Handler() {
+        @Override
+        public void handleMessage(Message msg) {
+            super.handleMessage(msg);
+            if (callback != null) {
+                int progress = msg.arg1;
+                callback.onProgress(progress);
+                if (progress < 100) {
+                    callProgress();
+                }
+            }
+        }
+    };
+
+    private void callProgress() {
+        Message message = new Message();
+        int progress = (int) (moveLength / totalLength * 100);
+        message.arg1 = progress;
+        int interval = callback != null ? callback.getInterval() : 200;
+        handler.sendMessageDelayed(message, interval);
+    }
+
+    private void delete(String path) {
         if (path == null) {
             return;
         }
@@ -124,12 +167,12 @@ public class FileMoveManager {
             file.deleteOnExit();
         } else {
             for (File f : file.listFiles()) {
-                remove(f);
+                delete(f);
             }
         }
     }
 
-    private void remove(File file) {
+    private void delete(File file) {
         if (!file.exists()) {
             return;
         }
@@ -137,7 +180,7 @@ public class FileMoveManager {
             file.deleteOnExit();
         } else {
             for (File f : file.listFiles()) {
-                remove(f);
+                delete(f);
             }
         }
     }
