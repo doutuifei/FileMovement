@@ -15,10 +15,15 @@ import java.io.File;
 
 public class MainActivity extends AppCompatActivity {
 
+    private String testDirs;
+    private String newDesc;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        testDirs = Environment.getExternalStorageDirectory() + "/a";
+        newDesc = getExternalFilesDir(null).getAbsolutePath();
         requestPermission();
     }
 
@@ -41,9 +46,7 @@ public class MainActivity extends AppCompatActivity {
 
     public void moveFile(View view) {
         final long startMillis = System.currentTimeMillis();
-        String oldPath = Environment.getExternalStorageDirectory() + "/aaa";
-        String newDesc = getExternalFilesDir(null).getAbsolutePath();
-        FileMoveManager.getInstance().move(oldPath, newDesc, new Callback() {
+        FileMoveManager.getInstance().move(testDirs, newDesc, new Callback() {
             @Override
             public int getInterval() {
                 return 200;
@@ -56,12 +59,12 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onScan(File file) {
-                Log.e("MainActivity", "scan-->" + file.getAbsolutePath());
+//                Log.e("MainActivity", "scan-->" + file.getAbsolutePath());
             }
 
             @Override
             public void onProgress(int progress) {
-                Log.e("MainActivity", "progress-->" + progress);
+//                Log.e("MainActivity", "progress-->" + progress);
             }
 
             @Override
@@ -73,4 +76,39 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    public void moveFileOkio(View view) {
+        final long startMillis = System.currentTimeMillis();
+        FileMoveManagerOkio.getInstance().move(testDirs, newDesc, new Callback() {
+            @Override
+            public int getInterval() {
+                return 200;
+            }
+
+            @Override
+            public void onStart() {
+//                Log.e("MainActivity", "start");
+            }
+
+            @Override
+            public void onScan(File file) {
+//                Log.e("MainActivity", "scan-->" + file.getAbsolutePath());
+            }
+
+            @Override
+            public void onProgress(int progress) {
+//                Log.e("MainActivity", "progress-->" + progress);
+            }
+
+            @Override
+            public void onFinish() {
+//                Log.e("MainActivity", "onFinish");
+                long finishMillis = System.currentTimeMillis() - startMillis;
+                Log.e("MainActivity", "finishMillis-->" + finishMillis);
+            }
+        });
+    }
+
+    public void clean(View view) {
+        FileUtils.deleteDir(newDesc);
+    }
 }
