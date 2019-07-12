@@ -4,12 +4,25 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:orientation="vertical"
     tools:context=".MainActivity">
+
+    <Button
+        android:onClick="clean"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="清空"/>
 
     <Button
         android:onClick="moveFile"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="迁移"/>
+
+    <Button
+        android:onClick="moveFileOkio"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="迁移Okio"/>
 
 </LinearLayout>
